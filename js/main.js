@@ -5,7 +5,16 @@ function degToRad(degrees) {
   return result;
 }
 
+document.getElementById('play').onclick = function() {
+  document.getElementById('play').disabled = true; 
+  console.log('play!');
+  init();
+}
+
+
 function init(){
+  var id_animate;
+  console.log('init');
     var scene = new THREE.Scene();
     HEIGHT = window.innerHeight;
     WIDTH = window.innerWidth;
@@ -31,9 +40,7 @@ function init(){
     document.exitPointerLock = document.exitPointerLock ||
                            document.mozExitPointerLock;
 
-    canvas.onclick = function() {
     canvas.requestPointerLock();
-    };
         
     const mouse = new THREE.Vector2();
     const target = new THREE.Vector2();
@@ -44,18 +51,18 @@ function init(){
     
     function animate() {
     
-      requestAnimationFrame( animate );
+      id_animate = requestAnimationFrame( animate );
     
-        target.x = ( mouse.x ) * 0.02;
-        target.y = ( mouse.y ) * 0.002;
-    
-        mouse.x = 0;
-        mouse.y = 0;
+      target.x = ( mouse.x ) * 0.02;
+      target.y = ( mouse.y ) * 0.002;
+  
+      mouse.x = 0;
+      mouse.y = 0;
 
-        camera.rotation.x -= 0.05 * ( target.y);
-        camera.rotation.y += 0.05 * ( target.x );
+      camera.rotation.x -= 0.05 * ( target.y);
+      camera.rotation.y += 0.05 * ( target.x );
 
-        renderer.render( scene, camera );
+      renderer.render( scene, camera );
     }
     
   
@@ -77,11 +84,13 @@ function init(){
     light.position.set(1,-2,-4);
     scene.add(light);
   }
-  
-  for(i=0; i<100; i++){
-     m = new Monster(randomSudut());
-    scene.add(m.mesh);
+
+  {
+    const pickPosition = {x: 0, y: 0};
+    const pickHelper = new PickHelper();
   }
+  
+  setInterval(createMonster, 3000);
 
   // Hook pointer lock state change events for different browsers
 document.addEventListener('pointerlockchange', lockChangeAlert, false);
@@ -95,14 +104,20 @@ function lockChangeAlert() {
   } else {
     console.log('The pointer lock status is now unlocked');  
     document.removeEventListener("mousemove", updatePosition, false);
+    document.getElementById('play').disabled = false; 
+    cancelAnimationFrame(id_animate);
+    
   }
 }
-
-var tracker = document.getElementById('tracker');
 
 function updatePosition(e) {
   mouse.x = e.movementX;
   mouse.y = e.movementY;
+}
+
+function createMonster(){
+  var m = new Monster(randomSudut());
+  scene.add(m.mesh);
 }
 
    animate();
@@ -112,5 +127,3 @@ function updatePosition(e) {
 function randomSudut(){
     return Math.random() * Math.PI * 2;
 }
-  
-  init();
