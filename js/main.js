@@ -54,21 +54,30 @@ document.getElementById('play').onclick = function() {
     container = document.getElementById('world');
     container.appendChild(renderer.domElement);
       
-    {
-      const color = 0xffffff;
-      const intensity = 1;
-      const light = new THREE.DirectionalLight(color, intensity);
-      light.position.set(-1,2,4);
-      scene.add(light);
+  //   {
+  //     const color = 0x4f4f4f;
+  //     const intensity = .3;
+  //     const distance = 1000;
+  //     const light = new THREE.PointLight(color, intensity, distance);
+  //     light.position.set(0,,0);
+  //     scene.add(light);
+  // }
+  {
+    var spotLight = new THREE.SpotLight( 0xffffff, .5, 1000, 0.6, 0.5, 1.5);
+    spotLight.position.set( 0, 0, 0 );
+    scene.add(spotLight);
+    // spotLight.castShadow = true;
   }
   
-  {
-    const color = 0xffffff;
-    const intensity = 1;
-    const light = new THREE.DirectionalLight(color, intensity);
-    light.position.set(1,-2,-4);
-    scene.add(light);
-  }
+  // var light = new THREE.AmbientLight( 0x404040 ); // soft white light
+  // scene.add( light );
+  // {
+  //   const color = 0xffffff;
+  //   const intensity = 1;
+  //   const light = new THREE.DirectionalLight(color, intensity);
+  //   light.position.set(1,-2,-4);
+  //   scene.add(light);
+  // }
 
   {
     const mtlLoader = new THREE.MTLLoader();
@@ -154,7 +163,14 @@ function updateShoot(){
   shoot.position.z = -Math.cos(camera.rotation.y) * radius;
   
   shoot.position.y = Math.sin(camera.rotation.x) * radius;
+
+  shoot.rotation.z = -camera.rotation.y;
   // shoot.lookAt(camera);
+  // shoot.rotation.x = Math.PI / 2.0;
+  spotLight.target.position.x = shoot.position.x;
+  spotLight.target.position.y = shoot.position.y;
+  spotLight.target.position.z = shoot.position.z;
+  scene.add(spotLight.target);
 }
 
 function monstersApproaching(){
