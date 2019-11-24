@@ -1,4 +1,15 @@
-const RADIUS = 20;
+const radius = 50;
+var scene;
+var camera;
+var monsters;
+var shoot;
+var canvas;
+var renderer;
+var id_animate;
+var mouse;
+var target;
+
+
 
 function degToRad(degrees) {
   var result = Math.PI / 180 * degrees;
@@ -8,14 +19,14 @@ function degToRad(degrees) {
 document.getElementById('play').onclick = function() {
   document.getElementById('play').disabled = true; 
   console.log('play!');
-  init();
+  play();
 }
 
 
-function init(){
-  var id_animate;
+// function init(){
   console.log('init');
-    var scene = new THREE.Scene();
+    scene = new THREE.Scene();
+    scene.background = new THREE.Color('black');
     HEIGHT = window.innerHeight;
     WIDTH = window.innerWidth;
     aspectRatio = WIDTH / HEIGHT;
@@ -32,40 +43,14 @@ function init(){
     renderer.setPixelRatio(window.devicePixelRatio); 
     renderer.setSize(WIDTH, HEIGHT);
     renderer.shadowMap.enabled = true;
-    var canvas = document.querySelector('#world');
-    
-    canvas.requestPointerLock = canvas.requestPointerLock ||
-                            canvas.mozRequestPointerLock;
-
-    document.exitPointerLock = document.exitPointerLock ||
-                           document.mozExitPointerLock;
-
-    canvas.requestPointerLock();
-        
-    const mouse = new THREE.Vector2();
-    const target = new THREE.Vector2();
+   
+    mouse = new THREE.Vector2();
+    target = new THREE.Vector2();
   
     var flag=1;
   
     camera.position.set( 0, 0, 0 );
-    
-    function animate() {
-    
-      id_animate = requestAnimationFrame( animate );
-    
-      target.x = ( mouse.x ) * 0.02;
-      target.y = ( mouse.y ) * 0.002;
-  
-      mouse.x = 0;
-      mouse.y = 0;
 
-      camera.rotation.x -= 0.05 * ( target.y);
-      camera.rotation.y += 0.05 * ( target.x );
-
-      renderer.render( scene, camera );
-    }
-    
-  
     container = document.getElementById('world');
     container.appendChild(renderer.domElement);
       
@@ -86,10 +71,60 @@ function init(){
   }
 
   {
-    const pickPosition = {x: 0, y: 0};
-    const pickHelper = new PickHelper();
-  }
+    const mtlLoader = new THREE.MTLLoader();
+    mtlLoader.load('assets/syut.mtl',  (materials) =>{
+      console.log('MTL');
+        const objLoader = new THREE.OBJLoader();
+        materials.preload();
+        objLoader.setMaterials(materials);
+        objLoader.load('assets/syut.obj', (root) => {
+            root.rotation.x = Math.PI / 2.0;
+            root.position.z = -radius;
+            root.name = 'shoot';
+            scene.add(root);
+            console.log(root);
+        });
+    });
+}
+renderer.render( scene, camera );
+// }
+
+function play(){
+
+   canvas = document.querySelector('#world');
+
+    
+    canvas.requestPointerLock = canvas.requestPointerLock ||
+                            canvas.mozRequestPointerLock;
+
+    document.exitPointerLock = document.exitPointerLock ||
+                           document.mozExitPointerLock;
+
+    canvas.requestPointerLock();
+        
+    
+    shoot = scene.getObjectByName('shoot');
+    function animate() {
+    
+      id_animate = requestAnimationFrame( animate );
+
+      monstersApproaching();
+    
+      target.x = ( mouse.x ) * 0.04;
+      target.y = ( mouse.y) * 0.001;
   
+      mouse.x = 0;
+      mouse.y = 0;
+
+      camera.rotation.x -= 0.05 * ( target.y );
+      camera.rotation.y -= 0.05 * ( target.x );
+        updateShoot();
+
+      renderer.render( scene, camera );
+    }
+    
+  
+   
   setInterval(createMonster, 3000);
 
   // Hook pointer lock state change events for different browsers
@@ -110,13 +145,38 @@ function lockChangeAlert() {
   }
 }
 
+function updateShoot(){
+  if(shoot===undefined){
+    console.log(shoot);
+    shoot = scene.getObjectByName('shoot');
+  }
+  shoot.position.x = -Math.sin(camera.rotation.y) * radius;
+  shoot.position.z = -Math.cos(camera.rotation.y) * radius;
+  
+  shoot.position.y = Math.sin(camera.rotation.x) * radius;
+  // shoot.lookAt(camera);
+}
+
+function monstersApproaching(){
+  for (i=0; i<monsters.length; i++){
+    monsters[i].approach();
+    if(monsters[i].radius < 100){
+      scene.remove(monsters[i].mesh);
+      monsters.splice(monsters[i], 1);
+    }
+  }
+  console.log(monsters.length)
+}
+
 function updatePosition(e) {
   mouse.x = e.movementX;
   mouse.y = e.movementY;
 }
 
+monsters = [];
 function createMonster(){
   var m = new Monster(randomSudut());
+  monsters.push(m);
   scene.add(m.mesh);
 }
 
