@@ -8,7 +8,9 @@ var renderer;
 var id_animate;
 var mouse;
 var target;
-
+var centerScreen;
+var pickHelper;
+var pickPosition;
 
 
 function degToRad(degrees) {
@@ -29,6 +31,7 @@ document.getElementById('play').onclick = function() {
     scene.background = new THREE.Color('black');
     HEIGHT = window.innerHeight;
     WIDTH = window.innerWidth;
+    centerScreen = {x: WIDTH/2, y: HEIGHT/2};
     aspectRatio = WIDTH / HEIGHT;
     fieldOfView = 60;
     nearPlane = 1;
@@ -53,31 +56,13 @@ document.getElementById('play').onclick = function() {
 
     container = document.getElementById('world');
     container.appendChild(renderer.domElement);
-      
-  //   {
-  //     const color = 0x4f4f4f;
-  //     const intensity = .3;
-  //     const distance = 1000;
-  //     const light = new THREE.PointLight(color, intensity, distance);
-  //     light.position.set(0,,0);
-  //     scene.add(light);
-  // }
+  
   {
-    var spotLight = new THREE.SpotLight( 0xffffff, .5, 1000, 0.6, 0.5, 1.5);
+    var spotLight = new THREE.SpotLight( color=0xffaaaa, intensity=.5, distance=1000, angle=1.0, penumbra=0.5, decay=1.5);
     spotLight.position.set( 0, 0, 0 );
     scene.add(spotLight);
-    // spotLight.castShadow = true;
   }
   
-  // var light = new THREE.AmbientLight( 0x404040 ); // soft white light
-  // scene.add( light );
-  // {
-  //   const color = 0xffffff;
-  //   const intensity = 1;
-  //   const light = new THREE.DirectionalLight(color, intensity);
-  //   light.position.set(1,-2,-4);
-  //   scene.add(light);
-  // }
 
   {
     const mtlLoader = new THREE.MTLLoader();
@@ -96,67 +81,62 @@ document.getElementById('play').onclick = function() {
     });
 }
 renderer.render( scene, camera );
-// }
 
 function play(){
+  canvas = document.querySelector('#world');    
+  canvas.requestPointerLock = canvas.requestPointerLock ||
+                          canvas.mozRequestPointerLock;
+  document.exitPointerLock = document.exitPointerLock ||
+                          document.mozExitPointerLock;
+  canvas.requestPointerLock();
+  shoot = scene.getObjectByName('shoot');
 
-   canvas = document.querySelector('#world');
+  pickHelper = new PickHelper();
+  pickPosition = {x:0, y:0};
 
-    
-    canvas.requestPointerLock = canvas.requestPointerLock ||
-                            canvas.mozRequestPointerLock;
-
-    document.exitPointerLock = document.exitPointerLock ||
-                           document.mozExitPointerLock;
-
-    canvas.requestPointerLock();
-        
-    
-    shoot = scene.getObjectByName('shoot');
-    function animate() {
-    
-      id_animate = requestAnimationFrame( animate );
-
-      monstersApproaching();
-    
-      target.x = ( mouse.x ) * 0.04;
-      target.y = ( mouse.y) * 0.001;
+  function animate() {
   
-      mouse.x = 0;
-      mouse.y = 0;
+    id_animate = requestAnimationFrame( animate );
 
-      camera.rotation.x -= 0.05 * ( target.y );
-      camera.rotation.y -= 0.05 * ( target.x );
-        updateShoot();
-
-      renderer.render( scene, camera );
-    }
-    
+    monstersApproaching();
   
-   
+    target.x = ( mouse.x ) * 0.04;
+    target.y = ( mouse.y) * 0.001;
+
+    mouse.x = 0;
+    mouse.y = 0;
+
+    camera.rotation.x -= 0.05 * ( target.y );
+    camera.rotation.y -= 0.05 * ( target.x );
+      updateShoot();
+
+    renderer.render( scene, camera );
+  }
+  
   setInterval(createMonster, 3000);
 
   // Hook pointer lock state change events for different browsers
-document.addEventListener('pointerlockchange', lockChangeAlert, false);
-document.addEventListener('mozpointerlockchange', lockChangeAlert, false);
+  document.addEventListener('pointerlockchange', lockChangeAlert, false);
+  document.addEventListener('mozpointerlockchange', lockChangeAlert, false);
+  
+  canvas.addEventListener('click', setSelected);
 
-function lockChangeAlert() {
-  if (document.pointerLockElement === canvas ||
-      document.mozPointerLockElement === canvas) {
-    console.log('The pointer lock status is now locked');
-    document.addEventListener("mousemove", updatePosition, false);
-  } else {
-    console.log('The pointer lock status is now unlocked');  
-    document.removeEventListener("mousemove", updatePosition, false);
-    document.getElementById('play').disabled = false; 
-    cancelAnimationFrame(id_animate);
-    
+  function lockChangeAlert() {
+    if (document.pointerLockElement === canvas ||
+        document.mozPointerLockElement === canvas) {
+      console.log('The pointer lock status is now locked');
+      document.addEventListener("mousemove", updatePosition, false);
+    } else {
+      console.log('The pointer lock status is now unlocked');  
+      document.removeEventListener("mousemove", updatePosition, false);
+      document.getElementById('play').disabled = false; 
+      cancelAnimationFrame(id_animate);
+      
+    }
   }
-}
 
 function updateShoot(){
   if(shoot===undefined){
-    console.log(shoot);
     shoot = scene.getObjectByName('shoot');
   }
   shoot.position.x = -Math.sin(camera.rotation.y) * radius;
@@ -165,8 +145,6 @@ function updateShoot(){
   shoot.position.y = Math.sin(camera.rotation.x) * radius;
 
   shoot.rotation.z = -camera.rotation.y;
-  // shoot.lookAt(camera);
-  // shoot.rotation.x = Math.PI / 2.0;
   spotLight.target.position.x = shoot.position.x;
   spotLight.target.position.y = shoot.position.y;
   spotLight.target.position.z = shoot.position.z;
@@ -181,7 +159,7 @@ function monstersApproaching(){
       monsters.splice(monsters[i], 1);
     }
   }
-  console.log(monsters.length)
+  console.log('length ', monsters.length);
 }
 
 function updatePosition(e) {
@@ -196,9 +174,45 @@ function createMonster(){
   scene.add(m.mesh);
 }
 
-   animate();
+function getCanvasRelativePosition() {
+  const rect = canvas.getBoundingClientRect();
+  return {
+    x:  centerScreen.x - rect.left,
+    y:  centerScreen.y - rect.top,
+  };
 }
 
+function setPickPosition() {
+  const pos = getCanvasRelativePosition();
+  pickPosition.x = (pos.x / canvas.clientWidth ) *  2 - 1;
+  pickPosition.y = (pos.y / canvas.clientHeight) * -2 + 1;  // note we flip Y
+}
+
+function clearPickPosition() {
+  // unlike the mouse which always has a position
+  // if the user stops touching the screen we want
+  // to stop picking. For now we just pick a value
+  // unlikely to pick something
+  pickPosition.x = -100000;
+  pickPosition.y = -100000;
+}
+
+
+function setSelected(event) {
+  console.log('clicked');
+  setPickPosition();
+  pickHelper.pick(pickPosition, scene, camera);
+  if(pickHelper.pickedObject===null) {
+    return;
+  }
+  else {
+    scene.remove(pickHelper.pickedObject);
+  }
+  clearPickPosition();
+}
+
+   animate();
+}
 
 function randomSudut(){
     return Math.random() * Math.PI * 2;
