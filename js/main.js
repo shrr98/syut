@@ -11,10 +11,18 @@ var target;
 var centerScreen;
 var pickHelper;
 var pickPosition;
+var VIEW_LIMIT;
+
+let CAM_RANGEMAX;
 
 
 function degToRad(degrees) {
   var result = Math.PI / 180 * degrees;
+  return result;
+}
+
+function radToDeg(rad) {
+  var result = 180 / Math.PI * rad;
   return result;
 }
 
@@ -29,8 +37,8 @@ document.getElementById('play').onclick = function() {
   console.log('init');
     scene = new THREE.Scene();
     scene.background = new THREE.Color('black');
-    HEIGHT = window.innerHeight;
-    WIDTH = window.innerWidth;
+    HEIGHT = window.innerHeight * .9;
+    WIDTH = window.innerWidth * .9;
     centerScreen = {x: WIDTH/2, y: HEIGHT/2};
     aspectRatio = WIDTH / HEIGHT;
     fieldOfView = 60;
@@ -40,7 +48,10 @@ document.getElementById('play').onclick = function() {
       fieldOfView,
       aspectRatio,
       nearPlane,
-      farPlane);
+      farPlane
+    );
+    CAM_RANGEMAX = farPlane;
+    VIEW_LIMIT = degToRad(fieldOfView);
   
     renderer = new THREE.WebGLRenderer({alpha: true, antialias: true });
     renderer.setPixelRatio(window.devicePixelRatio); 
@@ -58,7 +69,7 @@ document.getElementById('play').onclick = function() {
     container.appendChild(renderer.domElement);
   
   {
-    var spotLight = new THREE.SpotLight( color=0xffaaaa, intensity=.5, distance=1000, angle=1.0, penumbra=0.5, decay=1.5);
+    var spotLight = new THREE.SpotLight( color=0xffaaaa, intensity=1, distance=1000, angle=.7, penumbra=0.5, decay=2.0);
     spotLight.position.set( 0, 0, 0 );
     scene.add(spotLight);
   }
@@ -76,7 +87,6 @@ document.getElementById('play').onclick = function() {
             root.position.z = -radius;
             root.name = 'shoot';
             scene.add(root);
-            console.log(root);
         });
     });
 }
@@ -100,6 +110,11 @@ function play(){
 
     monstersApproaching();
   
+    clearMiniWorld();
+    drawViewRange();
+    drawCircle(0, 0, 'green');
+    plotMonsters(monsters);
+
     target.x = ( mouse.x ) * 0.04;
     target.y = ( mouse.y) * 0.001;
 
@@ -159,7 +174,6 @@ function monstersApproaching(){
       monsters.splice(monsters[i], 1);
     }
   }
-  console.log('length ', monsters.length);
 }
 
 function updatePosition(e) {
@@ -177,8 +191,10 @@ function createMonster(){
 function getCanvasRelativePosition() {
   const rect = canvas.getBoundingClientRect();
   return {
-    x:  centerScreen.x - rect.left,
-    y:  centerScreen.y - rect.top,
+    // x:  centerScreen.x - rect.left,
+    // y:  centerScreen.y - rect.top,
+    x: canvas.clientWidth / 2.0,
+    y : canvas.clientHeight / 2.0,
   };
 }
 
@@ -211,9 +227,104 @@ function setSelected(event) {
   clearPickPosition();
 }
 
-   animate();
+  createMiniWorld();
+
+  animate();
 }
 
 function randomSudut(){
     return Math.random() * Math.PI * 2;
 }
+
+let SCALE;
+var context;
+var canvas_mini;
+
+function createMiniWorld(){
+  canvas_mini = document.getElementById('miniworld');
+  SCALE = canvas_mini.width / CAM_RANGEMAX.toFixed(2);
+  context = canvas_mini.getContext('2d');
+    
+  drawCircle(0, 0, 'green');
+}
+
+function clearMiniWorld(){
+  context.clearRect(0, 0, canvas_mini.width, canvas_mini.height);
+}
+
+function plotMonsters(monsters){
+    monsters.forEach(function(m) {
+    centerX = m.mesh.position.x;
+    centerY = m.mesh.position.z;
+
+    color = 'red';
+    drawCircle(centerX, centerY, color);
+  });
+}
+
+function drawCircle(x, y, color){
+  var radius = 3;
+
+  x = (x+CAM_RANGEMAX) * SCALE * .5; 
+  y = (y+CAM_RANGEMAX) * SCALE * .5; 
+
+  context.beginPath();
+  context.arc(x, y, radius, 0, 2 * Math.PI, false);
+  context.fillStyle = color;
+  context.fill();
+}
+
+function drawViewRange(){
+  lookat = -camera.rotation.y;
+  angleLeft = lookat - VIEW_LIMIT * .5;
+  angleRight = lookat + VIEW_LIMIT * .5;
+
+  // console.log(radToDeg(angleLeft), radToDeg(lookat), radToDeg(angleRight));
+
+  left  = [Math.sin(angleLeft) * canvas_mini.width, Math.cos(angleRight) * canvas_mini.width];
+  right = [Math.sin(angleRight) * canvas_mini.width, Math.cos(angleRight) * canvas_mini.width];
+  center = [canvas_mini.width/2, canvas_mini.height/2]
+  context.beginPath(); 
+  context.fillStyle = "#555555";
+  context.moveTo(center[0] + left[0], center[1] - left[1]);
+  context.lineTo(center[0], center[1]);
+  context.lineTo(center[0] + right[0], center[1] - right[1]);
+  context.fill(); 
+}
+
+// function createMiniWorld(){
+//   scale = 0.1;
+//   scene_mini = new THREE.Scene();
+//   scene_mini.background = new THREE.Color('red');
+//   HEIGHT = window.innerHeight * scale;
+//   WIDTH = window.innerWidth * scale;
+//   center_mini = {x: WIDTH/2, y: HEIGHT/2};
+//   aspectRatio = WIDTH / HEIGHT;
+//   fieldOfView = 60;
+//   nearPlane = 1;
+//   farPlane = 1000;
+//     camera_mini = new THREE.PerspectiveCamera(
+//       fieldOfView,
+//       aspectRatio,
+//       nearPlane,
+//       farPlane);
+  
+//     renderer_mini = new THREE.WebGLRenderer({alpha: true, antialias: true });
+//     renderer_mini.setPixelRatio(aspectRatio);
+//     renderer_mini.setSize(WIDTH, HEIGHT);
+//     renderer_mini.shadowMap.enabled = true;
+  
+//     var flag=1;
+  
+//     camera_mini.position.set( 0, 0, 0 );
+
+//     container = document.getElementById('miniworld');
+//     container.appendChild(renderer.domElement);
+  
+//   {
+//     var light = new THREE.AmbientLight( color=0xffaaaa, intensity=1);
+//     scene_mini.add(light);
+//   }
+  
+//   renderer_mini.render( scene, camera );
+// }

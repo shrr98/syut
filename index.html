@@ -4,11 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <link rel="stylesheet" href="css/style.css">
     <title>SYUT!</title>
 </head>
 <body>
-    <button id="play">PLAY</button>
-    <button id="stop">STOP</button>
+    <nav class="navbar fixed navbar-dark bg-dark">
+        <button id="play" class='btn btn-primary'>PLAY</button>
+        <button id="stop" class='btn btn-danger'>STOP</button>
+    </nav>
+    <div id="container-miniworld">
+        <canvas id='miniworld' height=200pt width=200pt></canvas>
+    </div>
     <div id="world"></div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/108/three.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/1.16.1/TweenMax.min.js"></script>

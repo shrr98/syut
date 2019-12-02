@@ -4,10 +4,10 @@ class PickHelper {
     this.pickedObject = null;
   }
   pick(normalizedPosition, scene, camera) {
-    if (this.pickedObject){
-      this.pickedObject.material.emissive.setHex(this.pickedObjectSavedColor);
-      this.pickedObject = undefined;
-    }
+    // if (this.pickedObject){
+    //   this.pickedObject.material.emissive.setHex(this.pickedObjectSavedColor);
+    //   this.pickedObject = undefined;
+    // }
 
     this.raycaster.setFromCamera(normalizedPosition, camera);
     const intersectedObjects = this.raycaster.intersectObjects(scene.children);
