@@ -281,7 +281,7 @@ function drawViewRange(){
 
   // console.log(radToDeg(angleLeft), radToDeg(lookat), radToDeg(angleRight));
 
-  left  = [Math.sin(angleLeft) * canvas_mini.width, Math.cos(angleRight) * canvas_mini.width];
+  left  = [Math.sin(angleLeft) * canvas_mini.width, Math.cos(angleLeft) * canvas_mini.width];
   right = [Math.sin(angleRight) * canvas_mini.width, Math.cos(angleRight) * canvas_mini.width];
   center = [canvas_mini.width/2, canvas_mini.height/2]
   context.beginPath(); 
@@ -291,40 +291,3 @@ function drawViewRange(){
   context.lineTo(center[0] + right[0], center[1] - right[1]);
   context.fill(); 
 }
-
-// function createMiniWorld(){
-//   scale = 0.1;
-//   scene_mini = new THREE.Scene();
-//   scene_mini.background = new THREE.Color('red');
-//   HEIGHT = window.innerHeight * scale;
-//   WIDTH = window.innerWidth * scale;
-//   center_mini = {x: WIDTH/2, y: HEIGHT/2};
-//   aspectRatio = WIDTH / HEIGHT;
-//   fieldOfView = 60;
-//   nearPlane = 1;
-//   farPlane = 1000;
-//     camera_mini = new THREE.PerspectiveCamera(
-//       fieldOfView,
-//       aspectRatio,
-//       nearPlane,
-//       farPlane);
-  
-//     renderer_mini = new THREE.WebGLRenderer({alpha: true, antialias: true });
-//     renderer_mini.setPixelRatio(aspectRatio);
-//     renderer_mini.setSize(WIDTH, HEIGHT);
-//     renderer_mini.shadowMap.enabled = true;
-  
-//     var flag=1;
-  
-//     camera_mini.position.set( 0, 0, 0 );
-
-//     container = document.getElementById('miniworld');
-//     container.appendChild(renderer.domElement);
-  
-//   {
-//     var light = new THREE.AmbientLight( color=0xffaaaa, intensity=1);
-//     scene_mini.add(light);
-//   }
-  
-//   renderer_mini.render( scene, camera );
-// }
