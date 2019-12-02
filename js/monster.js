@@ -7,6 +7,7 @@ class Monster extends THREE.Mesh{
         this.geometry = new THREE.BoxBufferGeometry(50,50,50);
         this.material = new THREE.MeshPhongMaterial({color:0xff0000});
         this.mesh = new THREE.Mesh(this.geometry, this.material);
+        this.mesh.name = 'hidup';
         this.calculatePosition();
     }
 

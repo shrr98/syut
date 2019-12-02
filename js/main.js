@@ -13,6 +13,8 @@ var pickHelper;
 var pickPosition;
 var VIEW_LIMIT;
 
+var score, lives;
+
 let CAM_RANGEMAX;
 
 
@@ -93,6 +95,9 @@ document.getElementById('play').onclick = function() {
 renderer.render( scene, camera );
 
 function play(){
+  createMiniWorld();
+  initStatus();
+
   canvas = document.querySelector('#world');    
   canvas.requestPointerLock = canvas.requestPointerLock ||
                           canvas.mozRequestPointerLock;
@@ -168,8 +173,17 @@ function updateShoot(){
 
 function monstersApproaching(){
   for (i=0; i<monsters.length; i++){
+    if(monsters[i].mesh.name === 'mati'){
+      monsters.splice(monsters[i], 1);
+      continue;
+    }
     monsters[i].approach();
     if(monsters[i].radius < 100){
+      lives-=1;
+      document. getElementById('lives').innerHTML = lives;
+      if(lives==0){
+        cancelAnimationFrame(id_animate);
+      }
       scene.remove(monsters[i].mesh);
       monsters.splice(monsters[i], 1);
     }
@@ -222,12 +236,13 @@ function setSelected(event) {
     return;
   }
   else {
+    score += 1;
+    document.getElementById('score').innerHTML = score;
+    pickHelper.pickedObject.name = 'mati';
     scene.remove(pickHelper.pickedObject);
   }
   clearPickPosition();
 }
-
-  createMiniWorld();
 
   animate();
 }
@@ -290,4 +305,11 @@ function drawViewRange(){
   context.lineTo(center[0], center[1]);
   context.lineTo(center[0] + right[0], center[1] - right[1]);
   context.fill(); 
+}
+
+function initStatus(){
+  score = 0;
+  lives = 3;
+  document. getElementById('score').innerHTML = score;
+  document. getElementById('lives').innerHTML = lives;
 }
